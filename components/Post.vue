@@ -1,13 +1,11 @@
-<template>
+<template v-if="post && post.body">
     <div class="flex flex-col md:flex-row my-8">
         <div class="w-full md:w-6/12 rounded overflow-hidden">
             <img class="object w-full h-auto" src="https://cdn.pixabay.com/photo/2020/02/03/00/12/fiber-4814456_960_720.jpg" alt="" />
         </div>
         <div class="w-full md:w-6/12 mt-4 md:mt-0 md:ml-4">
             <h2 class="text-lg font-semibold leading-tight text-gray-800">{{post.title}}</h2>
-            <div v-for="(item, i) in body" :key="i">
-                <p v-html="item['content']" class="leading-normal pt-2"></p>
-            </div>
+            <ContentfulRichTextRenderer :body="post.body" />
             <nuxt-link to="/">
                 <div class="flex items-center">
                     <span class=" hover:underline text-blue-600">Read more</span>
@@ -20,18 +18,17 @@
     </div>
 </template>
 <script>
-export default {
-    props: ['post'],
+import ContentfulRichTextRenderer from "./ContentfulRichTextRenderer.vue";
 
-    computed: {
-        body() {
-            return this.post.body.content
-        } 
+export default {
+    name: "Post",
+    props: {
+        post: {
+            type: Object,
+            required: true,
+        }
     },
 
-    mounted() {
-        console.log(this.body.content)
-    }
-   
+    components: { ContentfulRichTextRenderer }
 }
 </script>
