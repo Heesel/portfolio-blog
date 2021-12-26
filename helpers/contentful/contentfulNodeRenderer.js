@@ -2,7 +2,7 @@ import escapeHtml from './htmlEscaper';
 import nodeTypes from './nodeTypes';
 import nodeMarks from './nodeMarks';
 
-const attributeValue = (value) => `"${value.replace(/"/g, '&quot;')}"`;
+const attributeValue = (value) => `${value.replace(/"/g, '&quot;')}`;
 
 const renderFunctions = {
   [nodeTypes.PARAGRAPH]: (createElement, children) => createElement('p', null, children),
@@ -34,7 +34,7 @@ const renderFunctions = {
   [nodeTypes.EMBEDDED_ENTRY]: (createElement, children) => createElement('span', null, children),
   [nodeTypes.HYPERLINK]: (createElement, children, node) => {
     const href = typeof node.data.uri === 'string' ? node.data.uri : 'javascript:void(0)';
-    return createElement('a', { href: attributeValue(href) }, children);
+    return createElement('a', { attrs: { href: attributeValue(href) } }, children);
   },
 }
 
@@ -64,6 +64,21 @@ const renderNode = (node, createElement) => {
   }
 
   let children = [];
+  if(node.nodeType === 'embedded-asset-block' 
+    && Object.hasOwnProperty.call(node, 'data')
+    && Object.hasOwnProperty.call(node.data, 'target')
+    && Object.hasOwnProperty.call(node.data.target, 'fields')
+    && Object.hasOwnProperty.call(node.data.target.fields, 'file'))
+  {
+    const fieldData = node.data.target.fields;
+    const { title, file } = fieldData;
+    if(file.contentType.startsWith('image/')) {
+      const fileUrl = file.url;
+      children.push(createElement('img', { attrs: { src: attributeValue(fileUrl), title: attributeValue(title), class: 'blog-embedded-image' }}, []));
+    }
+  }
+
+  
   if(Object.hasOwnProperty.call(node, 'content') && Array.isArray(node.content) && node.content.length > 0) {
     children = renderNodeList(node.content, createElement);
   }
