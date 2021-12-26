@@ -15,8 +15,8 @@
           <div class="grid grid-cols-1 md:grid-cols-3">
             <div class="col-span-2">
               <div class="grid grid-cols-1">
-                <div v-for="n in 3" :key="n">
-                  <Post/>
+                <div v-for="(post, p) in posts" :key="p">
+                  <Post :post="post.fields"/>
                 </div>
               </div>
               <div class="flex items-center text-gray-400">
@@ -43,9 +43,38 @@
 </template>
 
 <script>
-
+import * as contentful from 'contentful'
 export default {
   name: 'index',
+
+
+  data() {
+    return {
+      posts: []
+    }
+  },
+
+    // const client = contentful.createClient({
+    //   space: 'fc0viabi5vnb',
+    //   accessToken: 'lpqJZFZsLFEhqpvQeN1rysI2uSpEI_FTgnpIZpfocpk'
+    // });
+
+    // const res = await client.getEntry("4Khj4TGEp8vsY30smi94SR")
+    // console.log(res);
+
+  async mounted() {
+    
+    const client = contentful.createClient({
+      space: process.env.space,
+      accessToken: process.env.accessToken
+    });
+
+    const result = await client.getEntries();
+    this.posts = result.items
+    console.log(this.posts)
+
+  },
+
 
 }
 </script>
