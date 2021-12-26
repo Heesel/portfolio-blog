@@ -39,5 +39,10 @@ export default {
 
   // Build Configuration: https://go.nuxtjs.dev/config-build
   build: {
+  },
+
+  env: {
+    space: process.env.SPACE || 'not-found',
+    accessToken: process.env.ACCESS_TOKEN || 'not-found'
   }
 }
