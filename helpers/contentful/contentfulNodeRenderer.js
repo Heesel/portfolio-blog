@@ -46,8 +46,25 @@ const markRenderers = {
   [nodeMarks.CODE]: (content, createElement) => createElement('code', null, content),
 }
 
-const renderTextContent = (text, marks, createElement) => {
-  const escapedText = escapeHtml(text);
+const renderTextContent = (text, marks, createElement, characterCounter) => {
+  let escapedText = escapeHtml(text);
+
+  if(characterCounter !== undefined) {
+    if(characterCounter.count > characterCounter.limit) return '';
+    
+    const remainingCharacters = characterCounter.limit - characterCounter.count;
+    if(escapedText.length > remainingCharacters) {
+      for(var i = remainingCharacters - 3; i < escapedText.length; i++) {
+        if(escapedText[i] === ' ') {
+          escapedText = escapedText.substring(0, i) + '...';
+          break;
+        }
+      }
+    }
+
+    characterCounter.count += escapedText.length;
+  }
+
   if(marks.length === 0) return escapedText;
 
   return marks.reduce((content, mark) => {
@@ -58,13 +75,18 @@ const renderTextContent = (text, marks, createElement) => {
   }, escapedText)
 }
 
-const renderNode = (node, createElement) => {
+const renderNode = (node, createElement, characterCounter) => {
+  if(characterCounter !== undefined && characterCounter.count >= characterCounter.limit) {
+    return null;
+  }
+
   if(node.nodeType === 'text') {
-    return renderTextContent(node.value, node.marks, createElement);
+    return renderTextContent(node.value, node.marks, createElement, characterCounter);
   }
 
   let children = [];
-  if(node.nodeType === 'embedded-asset-block' 
+  if(characterCounter === undefined
+    && node.nodeType === 'embedded-asset-block' 
     && Object.hasOwnProperty.call(node, 'data')
     && Object.hasOwnProperty.call(node.data, 'target')
     && Object.hasOwnProperty.call(node.data.target, 'fields')
@@ -80,7 +102,7 @@ const renderNode = (node, createElement) => {
 
   
   if(Object.hasOwnProperty.call(node, 'content') && Array.isArray(node.content) && node.content.length > 0) {
-    children = renderNodeList(node.content, createElement);
+    children = renderNodeList(node.content, createElement, characterCounter);
   }
 
   if(!Object.hasOwnProperty.call(renderFunctions, node.nodeType))
@@ -89,15 +111,26 @@ const renderNode = (node, createElement) => {
   return renderFunctions[node.nodeType](createElement, children, node);
 }
 
-const renderNodeList = (nodes, createElement) => nodes.map(node => renderNode(node, createElement));
+const renderNodeList = (nodes, createElement, characterCounter) => {
+  if(characterCounter !== undefined && characterCounter.count >= characterCounter.limit) {
+    return [];
+  }
 
-//by default, spacing is added to the contentful nodes. This can be turned off by passing in false as the third argument.
-const renderContentfulPost = (postBody, createElement, addSpacing) => {
+  return nodes.map(node => renderNode(node, createElement, characterCounter))
+              .filter(node => node !== null && node !== undefined);
+}
+
+const renderContentfulPost = (postBody, createElement, addSpacing, characterLimit) => {
   if(!Object.hasOwnProperty.call(postBody, 'nodeType') || postBody.nodeType !== 'document') {
     return '';
   }
 
-  const parsedElements = renderNodeList(postBody.content, createElement);
+  let characterCounter = undefined;
+  if(characterLimit !== undefined && Number.isInteger(characterLimit) && characterLimit > 0) {
+    characterCounter = {count: 0, limit: characterLimit}
+  }
+
+  const parsedElements = renderNodeList(postBody.content, createElement, characterCounter);
   let childElementsToRender = [];
 
   if(addSpacing === false) {

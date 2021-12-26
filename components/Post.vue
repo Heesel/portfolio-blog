@@ -5,7 +5,7 @@
         </div>
         <div class="w-full md:w-6/12 mt-4 md:mt-0 md:ml-4">
             <h2 class="text-lg font-semibold leading-tight text-gray-800">{{post.title}}</h2>
-            <ContentfulRichTextRenderer :body="post.body" />
+            <ContentfulRichTextRenderer :body="post.body" :character-limit="200" />
             <nuxt-link to="/">
                 <div class="flex items-center">
                     <span class=" hover:underline text-blue-600">Read more</span>

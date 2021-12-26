@@ -12,11 +12,15 @@ export default {
     addSpacing: {
       type: Boolean,
       default: true,
-    }
+    },
+    characterLimit: {
+      type: Number,
+      default: undefined,
+    },
   },
 
   render: function(createElement) {
-    return renderContentfulPost(this.body, createElement, this.addSpacing);
+    return renderContentfulPost(this.body, createElement, this.addSpacing, this.characterLimit);
   }
 }
 </script>
